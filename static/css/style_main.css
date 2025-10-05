@@ -1,0 +1,146 @@
+:root {
+  --bg-color: #f3e8ff;
+  --card-color: #ffffff;
+  --text-color: #4a148c;
+  --input-border-color: #ce93d8;
+  --button-color: #8e24aa;
+  --button-hover-color: #6a1b9a;
+  --link-color: #9126be;
+  --google-btn-bg: #ffffff;
+  --google-btn-text: #444444;
+  --google-btn-border: #ccc;
+  --google-btn-hover-bg: #f0f0f0;
+  --separator-color: #999;
+}
+
+* {
+  margin: 0;
+  padding: 0;   
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+/* Navbar style */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--card-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--button-color);
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--text-color);
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+.nav-links a:hover,
+.nav-links .active {
+  color: var(--link-color);
+}
+
+.hero {
+  padding: 4rem 2rem;
+  text-align: center;
+  background: linear-gradient(to right, #e1bee7, #f3e8ff);
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--button-color);
+}
+
+.hero p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: #4a148c;
+}
+
+.btn-primary {
+  background-color: var(--button-color);
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 30px;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: var(--button-hover-color);
+}
+
+.features {
+  padding: 3rem 2rem;
+  text-align: center;
+  background-color: var(--card-color);
+}
+
+.features h2 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: var(--button-color);
+}
+
+.feature-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.feature-box {
+  background-color: #f9f0ff;
+  padding: 1.5rem;
+  border-radius: 15px;
+  width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s;
+}
+
+.feature-box:hover {
+  transform: translateY(-5px);
+}
+
+.feature-box h3 {
+  color: var(--link-color);
+  margin-bottom: 0.5rem;
+}
+
+.feature-box p {
+  color: #5e35b1;
+}
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  background-color: #e1bee7;
+  color: #4a148c;
+  font-size: 0.9rem;
+}

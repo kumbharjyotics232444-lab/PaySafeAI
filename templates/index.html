@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PaySafe AI</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_main.css') }}"
+    />
+
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='Asset/favicon_io/apple-touch-icon.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='Asset/favicon_io/favicon-32x32.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='Asset/favicon_io/favicon-16x16.png') }}"
+    />
+    <link
+      rel="manifest"
+      href="{{ url_for('static', filename='Asset/favicon_io/site.webmanifest') }}"
+    />
+  </head>
+  <body>
+    <header>
+      <nav class="navbar">
+        <div class="logo">PaySafe AI</div>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('index') }}" class="active">Home</a></li>
+          <li><a href="{{ url_for('login_page') }}">Sign In</a></li>
+          <li><a href="{{ url_for('signup_page') }} ">Sign up</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Welcome to PaySafe AI</h1>
+        <p>
+          Secure your payments with intelligent fraud detection – fast,
+          reliable, and real-time.
+        </p>
+        <a href="signup.html" class="btn-primary">Get Started</a>
+      </div>
+    </section>
+
+    <section class="features">
+      <h2>Why PaySafe AI?</h2>
+      <div class="feature-grid">
+        <div class="feature-box">
+          <h3>AI-Powered Detection</h3>
+          <p>
+            Leverages machine learning to detect suspicious activity instantly.
+          </p>
+        </div>
+        <div class="feature-box">
+          <h3>Real-Time Alerts</h3>
+          <p>
+            Alerts users about fraudulent behavior before the transaction
+            completes.
+          </p>
+        </div>
+        <div class="feature-box">
+          <h3>User-Friendly Interface</h3>
+          <p>Minimal, intuitive design for quick actions and understanding.</p>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

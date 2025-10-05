@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile - PaySafe AI</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_main.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_profile.css') }}"
+    />
+
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='Asset/favicon_io/apple-touch-icon.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='Asset/favicon_io/favicon-32x32.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='Asset/favicon_io/favicon-16x16.png') }}"
+    />
+    <link
+      rel="manifest"
+      href="{{ url_for('static', filename='Asset/favicon_io/site.webmanifest') }}"
+    />
+  </head>
+  <body>
+    <header>
+      <nav class="navbar">
+        <div class="logo">PaySafe AI</div>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('index_user') }}">Home</a></li>
+          <li>
+            <a href="{{ url_for('user_profile') }}" class="active">Profile</a>
+          </li>
+          <li>
+            <a href="{{ url_for('user_transaction_form') }}"
+              >Transaction Form</a
+            >
+          </li>
+          <li><a href="{{ url_for('user_history') }}">History</a></li>
+          <li>
+            <a href="{{ url_for('index') }}" onclick="logout()">Logout</a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <section class="profile-container">
+      <div class="profile-card">
+        <h2>Profile</h2>
+        <div class="profile-info" id="profileDisplay">
+          <p><strong>Full Name:</strong> <span id="displayName"></span></p>
+          <p><strong>Email:</strong> <span id="displayEmail"></span></p>
+          <p><strong>Password:</strong> ********</p>
+        </div>
+
+        <div class="profile-info" id="profileEdit" style="display: none">
+          <p><strong>Full Name:</strong> <input type="text" id="editName" /></p>
+          <p><strong>Email:</strong> <input type="email" id="editEmail" /></p>
+          <p>
+            <strong>Password:</strong>
+            <input type="password" id="editPassword" />
+          </p>
+        </div>
+
+        <div class="profile-buttons">
+          <button id="editBtn" class="btn-primary">Edit Profile</button>
+          <button id="saveBtn" class="btn-primary" style="display: none">
+            Save
+          </button>
+          <a href="index.html" class="btn-primary logout-btn" onclick="logout()"
+            >Logout</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <script>
+      const editBtn = document.getElementById("editBtn");
+      const saveBtn = document.getElementById("saveBtn");
+      const displaySection = document.getElementById("profileDisplay");
+      const editSection = document.getElementById("profileEdit");
+
+      const loggedInEmail = localStorage.getItem("userEmail");
+
+      async function fetchUserProfile() {
+        try {
+          const res = await fetch(`/api/user/${loggedInEmail}`);
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+          const user = await res.json();
+          if (!user) throw new Error("User not found");
+
+          document.getElementById("displayName").innerText = user.name;
+          document.getElementById("displayEmail").innerText = user.email;
+
+          document.getElementById("editName").value = user.name;
+          document.getElementById("editEmail").value = user.email;
+        } catch (err) {
+          console.error(err);
+          alert("Error loading profile");
+        }
+      }
+
+      editBtn.addEventListener("click", () => {
+        displaySection.style.display = "none";
+        editSection.style.display = "block";
+        editBtn.style.display = "none";
+        saveBtn.style.display = "inline-block";
+      });
+
+      saveBtn.addEventListener("click", async () => {
+        const newName = document.getElementById("editName").value;
+        const newEmail = document.getElementById("editEmail").value;
+        const newPassword = document.getElementById("editPassword").value;
+
+        try {
+          const res = await fetch(`/api/user/${loggedInEmail}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: newName,
+              email: newEmail,
+              password: newPassword || undefined,
+            }),
+          });
+
+          const data = await res.json();
+          if (!res.ok)
+            throw new Error(data.message || "Failed to update profile");
+
+          document.getElementById("displayName").innerText = data.user.name;
+          document.getElementById("displayEmail").innerText = data.user.email;
+          localStorage.setItem("userEmail", data.user.email);
+
+          displaySection.style.display = "block";
+          editSection.style.display = "none";
+          editBtn.style.display = "inline-block";
+          saveBtn.style.display = "none";
+          alert("Profile updated!");
+        } catch (err) {
+          alert("Error updating profile: " + err.message);
+        }
+      });
+
+      function logout() {
+        localStorage.removeItem("userEmail");
+      }
+      document.addEventListener("DOMContentLoaded", fetchUserProfile);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_main.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_dashboard.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='Asset/favicon_io/apple-touch-icon.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='Asset/favicon_io/favicon-32x32.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='Asset/favicon_io/favicon-16x16.png') }}"
+    />
+    <link
+      rel="manifest"
+      href="{{ url_for('static', filename='Asset/favicon_io/site.webmanifest') }}"
+    />
+    <style>
+      .card-title i {
+        margin-right: 8px;
+        color: #fff;
+      }
+
+      .dashboard-row {
+        margin-bottom: 20px;
+      }
+
+      .card {
+        margin-bottom: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav class="navbar">
+        <div class="logo">PaySafe AI</div>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('index_admin') }}">Home</a></li>
+          <li><a href="{{ url_for('admin_user') }}">Users</a></li>
+          <li>
+            <a href="{{ url_for('admin_dashboard') }}" class="active"
+              >Dashboard</a
+            >
+          </li>
+          <li><a href="{{ url_for('index') }}">Logout</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="container mt-5">
+      <h2 class="mb-4 text-center">Admin Dashboard</h2>
+
+      <div class="row dashboard-row">
+        <div class="col-md-3">
+          <div class="card text-white bg-primary">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-exchange-alt"></i>Total Transactions
+              </h5>
+              <p class="card-text fs-4" id="total-tx">0</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card text-white bg-danger">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-exclamation-triangle"></i>Frauds Detected
+              </h5>
+              <p class="card-text fs-4" id="fraud-tx">0</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card text-white bg-success">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-shield-alt"></i>Safe Transactions
+              </h5>
+              <p class="card-text fs-4" id="safe-tx">0</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card text-white bg-info">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fas fa-users"></i>Users</h5>
+              <p class="card-text fs-4" id="users-count">0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row dashboard-row">
+        <div class="col-md-3">
+          <div
+            class="card text-white"
+            style="background: linear-gradient(135deg, #17a2b8, #20c997)"
+          >
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-robot"></i>Model Version
+              </h5>
+              <p class="card-text fs-4" id="model-ver">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function loadDashboard() {
+        try {
+          const response = await fetch("/api/admin/dashboard");
+          const data = await response.json();
+
+          document.getElementById("total-tx").textContent = data.total;
+          document.getElementById("fraud-tx").textContent = data.frauds;
+          document.getElementById("safe-tx").textContent = data.safe;
+          document.getElementById("users-count").textContent = data.users;
+          document.getElementById("model-ver").textContent = data.model_version;
+        } catch (err) {
+          console.error("Error loading dashboard:", err);
+        }
+      }
+      window.onload = loadDashboard;
+    </script>
+  </body>
+</html>

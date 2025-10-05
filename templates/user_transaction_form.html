@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fraud Detection</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_transaction_form.css') }}"
+    />
+
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='Asset/favicon_io/apple-touch-icon.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='Asset/favicon_io/favicon-32x32.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='Asset/favicon_io/favicon-16x16.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{{ url_for('static', filename='Asset/favicon_io/favicon.ico') }}"
+    />
+    <link
+      rel="manifest"
+      href="{{ url_for('static', filename='Asset/favicon_io/site.webmanifest') }}"
+    />
+  </head>
+  <body>
+    <a href="user_history.html" class="history-btn">History</a>
+    <div class="form-card">
+      <h2>Fraud Detection</h2>
+      <form id="transactionForm">
+        <div>
+          <label>Withdrawal Amount</label>
+          <input
+            type="number"
+            step="0.01"
+            id="intended_balcon_amount"
+            required
+          />
+        </div>
+
+        <div>
+          <label>Customer Age</label>
+          <input type="number" id="customer_age" required />
+        </div>
+
+        <div>
+          <label>Income</label>
+          <input type="number" id="income" required />
+        </div>
+
+        <div>
+          <label>Credit Risk Score</label>
+          <input type="number" id="credit_risk_score" required />
+        </div>
+
+        <div>
+          <label>Email Name Similarity (0.0 to 1.0)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="1"
+            id="name_email_similarity"
+            required
+          />
+        </div>
+
+        <div>
+          <label>Session Length (minutes)</label>
+          <input
+            type="number"
+            step="0.1"
+            id="session_length_in_minutes"
+            required
+          />
+        </div>
+
+        <div>
+          <label>Payment Type</label>
+          <select id="payment_type" name="payment_type">
+            <option value="credit_card">Credit Card</option>
+            <option value="debit_card">Debit Card</option>
+            <option value="paypal">PayPal</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Device OS</label>
+          <select id="device_os" required>
+            <option value="android">Android</option>
+            <option value="windows">Windows</option>
+            <option value="ios">iOS</option>
+            <option value="linux">Linux</option>
+          </select>
+        </div>
+
+        <button type="submit">Check Transaction</button>
+        <div id="result"></div>
+      </form>
+    </div>
+
+    <script>
+      const form = document.getElementById("transactionForm");
+      const resultDiv = document.getElementById("result");
+
+      function convertToNumber(id) {
+        const element = document.getElementById(id);
+        if (!element || !element.value) return 0;
+
+        const integerFields = ["customer_age", "credit_risk_score", "month"];
+        return integerFields.includes(id)
+          ? parseInt(element.value)
+          : parseFloat(element.value);
+      }
+
+      function displayResult(data) {
+        const isFraud = data.prediction === "Fraud";
+
+        let html = `
+                <div class="${isFraud ? "fraud-result" : "safe-result"}">
+                    <h3>Prediction: ${data.prediction}</h3>
+                    <p><strong>ML Probability:</strong> ${
+                      data.probability
+                        ? (data.probability * 100).toFixed(2) + "%"
+                        : "N/A"
+                    }</p>
+                    <p><strong>Rule Score:</strong> ${data.rule_score}</p>
+                    <p><strong>Method Used:</strong> ${data.method}</p>
+                    ${
+                      data.risk_factors && data.risk_factors.length > 0
+                        ? `<p><strong>Risk Factors:</strong></p><ul>${data.risk_factors
+                            .map((f) => `<li>${f}</li>`)
+                            .join("")}</ul>`
+                        : "<p>No significant risk factors detected.</p>"
+                    }
+                </div>
+            `;
+        resultDiv.innerHTML = html;
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // inputs
+        const transactionData = {
+          income: convertToNumber("income"),
+          customer_age: convertToNumber("customer_age"),
+          intended_balcon_amount: convertToNumber("intended_balcon_amount"),
+          session_length_in_minutes: convertToNumber(
+            "session_length_in_minutes"
+          ),
+          name_email_similarity: convertToNumber("name_email_similarity"),
+          credit_risk_score: convertToNumber("credit_risk_score"),
+
+          payment_type: document.getElementById("payment_type").value,
+          device_os: document.getElementById("device_os").value,
+        };
+        // default values for missing fields
+        const systemDefaults = {
+          source: "web",
+          employment_status: "employed",
+          housing_status: "owned",
+          month: new Date().getMonth() + 1,
+          zip_count_4w: 5.0,
+          velocity_6h: 1000.0,
+          velocity_24h: 5000.0,
+          velocity_4w: 25000.0,
+          prev_address_months_count: 36.0,
+          current_address_months_count: 60.0,
+          days_since_request: 10.0,
+          bank_branch_count_8w: 3.0,
+          date_of_birth_distinct_emails_4w: 1.0,
+          bank_months_count: 36.0,
+          device_distinct_emails_8w: 1.0,
+          device_fraud_count: 0.0,
+          foreign_request: 0,
+          email_is_free: 0,
+          phone_home_valid: 1,
+          phone_mobile_valid: 1,
+          has_other_cards: 0,
+          proposed_credit_limit: 10000.0,
+          keep_alive_session: 0,
+        };
+
+        const finalData = { ...systemDefaults, ...transactionData };
+
+        resultDiv.innerHTML = `<p class="checking">Checking transaction...</p>`;
+
+        try {
+          const res = await fetch("/api/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(finalData),
+          });
+
+          if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(
+              `Server Error (${res.status}): ${
+                errorData.error || "Unknown error"
+              }`
+            );
+          }
+
+          const data = await res.json();
+          if (!data || !data.prediction)
+            throw new Error("Invalid response format from server");
+
+          displayResult(data);
+        } catch (error) {
+          console.error(error);
+          resultDiv.innerHTML =
+            '<p class="fraud-result">Error checking transaction. Please try again.</p>';
+        }
+      });
+    </script>
+  </body>
+</html>
