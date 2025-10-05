@@ -68,7 +68,7 @@
         <thead>
           <tr>
             <th>Amount</th>
-            <th>Age</th>
+            <th>Credit Score</th>
             <th>Income</th>
             <th>Payment Type</th>
             <th>Device OS</th>
@@ -103,7 +103,7 @@
               (r) => `
           <tr class="${r.prediction === "Fraud" ? "fraud" : "safe"}">
             <td>${r.intended_balcon_amount || "-"}</td>
-            <td>${r.customer_age || "-"}</td>
+            <td>${r.credit_score || "-"}</td>
             <td>${r.income || "-"}</td>
             <td>${r.payment_type || "-"}</td>
             <td>${r.device_os || "-"}</td>
@@ -137,6 +137,7 @@
           alert("Failed to delete transaction.");
         }
       }
+
       window.addEventListener("DOMContentLoaded", loadHistory);
     </script>
   </body>
