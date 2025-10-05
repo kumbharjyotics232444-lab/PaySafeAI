@@ -1,6 +1,4 @@
-// =====================
-// Dependencies
-// =====================
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -11,18 +9,13 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// =====================
-// MongoDB Connection
-// =====================
 mongoose.connect("mongodb+srv://kumbharjyotics232444:2rJuzrAMbUS9ZtQB@cluster0.rlkth.mongodb.net/PaySafeAI?retryWrites=true&w=majority", {
   dbName: "PaySafeAI"
 })
 .then(() => console.log("✅ MongoDB Connected"))
 .catch(err => console.error("❌ DB Connection Error:", err));
 
-// =====================
-// User Schema & Model
-// =====================
+
 const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
@@ -30,10 +23,6 @@ const userSchema = new mongoose.Schema({
 });
 
 const User = mongoose.models.User || mongoose.model("users", userSchema, "users");
-
-// =====================
-// Auth Routes
-// =====================
 
 // Signup
 app.post("/signup", async (req, res) => {
@@ -78,10 +67,6 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// =====================
-// Admin Routes
-// =====================
-
 // Get all users
 app.get("/admin/users", async (req, res) => {
   try {
@@ -102,10 +87,6 @@ app.delete("/admin/users/:id", async (req, res) => {
     res.status(500).json({ message: "Error deleting user", error: err.message });
   }
 });
-
-// =====================
-// User Routes
-// =====================
 
 // Get user by email
 app.get("/user/:email", async (req, res) => {
@@ -134,10 +115,6 @@ app.put("/user/:email", async (req, res) => {
     res.status(500).json({ message: "Error updating profile", error: err.message });
   }
 });
-
-// =====================
-// Fraud Detection Routes
-// =====================
 
 // History Table Schema
 const historySchema = new mongoose.Schema({
@@ -202,9 +179,6 @@ app.get("/history", async (req, res) => {
   }
 });
 
-// =====================
-// Start Server
-// =====================
 app.listen(5000, () => {
   console.log("🚀 Server running on http://localhost:5000");
 });
