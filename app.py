@@ -7,24 +7,17 @@ import certifi
 import numpy as np
 from bson import ObjectId
 
-# -----------------------------
-# Flask setup
-# -----------------------------
+
 app = Flask(__name__)
 app.secret_key = "yoursecretkey"
 
-# -----------------------------
-# MongoDB Atlas connection
-# -----------------------------
 MONGO_URI = "mongodb+srv://kumbharjyotics232444:2rJuzrAMbUS9ZtQB@cluster0.rlkth.mongodb.net/PaySafeAI?retryWrites=true&w=majority"
 client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
 db = client["PaySafeAI"]
 users_col = db["users"]
 history_col = db["history"]
 
-# -----------------------------
-# Page Routes
-# -----------------------------
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -81,9 +74,7 @@ def admin_dashboard():
         return redirect(url_for("login_page"))
     return render_template("admin_dashboard.html")
 
-# -----------------------------
-# API Routes
-# -----------------------------
+
 from test_final import hybrid_predict
 
 @app.route("/api/predict", methods=["POST"])
@@ -180,9 +171,7 @@ def user_profile_api(email):
         session["user"] = update_data["email"]
         return jsonify({"user": update_data})
 
-# -----------------------------
-# Fixed: Include _id as string
-# -----------------------------
+
 @app.route("/api/history", methods=["GET"])
 def history():
     if "user" not in session:
@@ -212,9 +201,7 @@ def logout():
     session.pop("role", None)
     return jsonify({"message": "Logged out successfully"})
 
-# -----------------------------
-# Admin APIs
-# -----------------------------
+
 @app.route("/api/admin/users", methods=["GET"])
 def get_all_users():
     if "user" not in session or session.get("role") != "admin":
@@ -251,8 +238,6 @@ def admin_dashboard_api():
         "model_version": "v1.0"
     })
 
-# -----------------------------
-# Run server
-# -----------------------------
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
