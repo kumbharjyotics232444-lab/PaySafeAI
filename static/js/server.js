@@ -12,8 +12,8 @@ app.use(bodyParser.json());
 mongoose.connect("mongodb+srv://kumbharjyotics232444:2rJuzrAMbUS9ZtQB@cluster0.rlkth.mongodb.net/PaySafeAI?retryWrites=true&w=majority", {
   dbName: "PaySafeAI"
 })
-.then(() => console.log("✅ MongoDB Connected"))
-.catch(err => console.error("❌ DB Connection Error:", err));
+.then(() => console.log(" MongoDB Connected"))
+.catch(err => console.error(" DB Connection Error:", err));
 
 
 const userSchema = new mongoose.Schema({
