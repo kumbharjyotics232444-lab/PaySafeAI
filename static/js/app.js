@@ -1,15 +1,15 @@
-require("dotenv").config();  // Load environment variables
+require("dotenv").config();  // Loads env variables
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const bcrypt = require("bcrypt");
-const User = require("./User");  // Your User model
+const User = require("./User");  
 
 const app = express();
 
-// ----- MIDDLEWARE -----
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -40,35 +40,7 @@ passport.deserializeUser((id, done) => {
   User.findById(id).then(user => done(null, user));
 });
 
-// ----- GOOGLE STRATEGY -----
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-//   callbackURL: process.env.NODE_ENV === "production"
-//                 ? "https://paysafeai.com/auth/google/callback"
-//                 : "http://localhost:5000/auth/google/callback"
-callbackURL: "http://localhost:5000/auth/google/callback"
 
-},
-
-  async (accessToken, refreshToken, profile, done) => {
-    try {
-      let user = await User.findOne({ googleId: profile.id });
-      if (user) return done(null, user);
-
-      // If new user, create in DB
-      user = new User({
-        name: profile.displayName,
-        email: profile.emails[0].value,
-        googleId: profile.id
-      });
-      await user.save();
-      done(null, user);
-    } catch(err) {
-      done(err, null);
-    }
-  }
-));
 
 // ----- ROUTES -----
 
@@ -115,19 +87,6 @@ app.get("/logout", (req, res) => {
     res.redirect("/login.html");
   });
 });
-
-// Google OAuth login/signup
-app.get("/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
-
-app.get("/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login.html" }),
-  (req, res) => {
-    // Successful login, redirect to dashboard
-    res.redirect("/login");
-  }
-);
 
 // Dashboard (protected route)
 app.get("/login", (req, res) => {
