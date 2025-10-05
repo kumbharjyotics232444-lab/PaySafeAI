@@ -1,18 +1,14 @@
-# Final Fraud Detection Test Script
-# Uses hybrid rule-based + ML approach
-# ----------------------
 import joblib
 import pandas as pd
 import numpy as np
-from typing import Dict, Any, Tuple, List # Added for type hinting
+from typing import Dict, Any, Tuple, List 
 
-# Load saved artifacts
+# Load pkl files
 model = joblib.load("fraud_model_final.pkl")
 scaler = joblib.load("scaler_final.pkl")
 label_encoders = joblib.load("label_encoders_final.pkl")
 feature_cols = joblib.load("feature_cols_final.pkl")
 
-# --- NEUTRAL DEFAULT FALLBACKS (Ensure all features are present) ---
 NEUTRAL_NUMERICAL_FALLBACKS: Dict[str, float] = {
     'income': 0.0, 'customer_age': 0.0, 'intended_balcon_amount': 0.0, 'session_length_in_minutes': 0.0,
     'credit_risk_score': 0.0, 'name_email_similarity': 0.0,
@@ -28,12 +24,9 @@ CATEGORICAL_DEFAULTS: Dict[str, str] = {
     'employment_status': 'employed', 'housing_status': 'owned',
     'payment_type': 'credit_card', 'device_os': 'android', 'source': 'web'
 }
-# ---------------------------------
 
-# NOTE: The calculate_rule_based_score function is kept from the original for structural alignment
 def calculate_rule_based_score(user_data):
     """Calculate rule-based fraud score"""
-    # Use .get() with a default for safety, although pre-processing should handle this
     income = user_data.get('income', 0)
     intended_balcon_amount = user_data.get('intended_balcon_amount', 0)
     customer_age = user_data.get('customer_age', 30)
@@ -42,7 +35,6 @@ def calculate_rule_based_score(user_data):
     name_email_similarity = user_data.get('name_email_similarity', 0.5)
     foreign_request = user_data.get('foreign_request', 0)
     
-    # Use 1e-6 to prevent division by zero
     withdrawal_ratio = intended_balcon_amount / (income + 1e-6)
     
     underage_risk = 1 if customer_age < 18 else 0
@@ -78,14 +70,9 @@ def calculate_rule_based_score(user_data):
     }
 
 def preprocess_user_input(user_input: Dict[str, Any]) -> Tuple[np.ndarray, int, Dict[str, Any]]:
-    """
-    Robust preprocessing: fill defaults, engineer rules, encode, align, and scale.
-    """
-    
-    # 1. INITIALIZE & FILL MISSING VALUES
+        
     processed_data = {}
     
-    # Fill Numerical/Binary Features with explicit fallbacks
     for field, fallback_value in NEUTRAL_NUMERICAL_FALLBACKS.items():
         if field in user_input:
             try:
@@ -95,29 +82,26 @@ def preprocess_user_input(user_input: Dict[str, Any]) -> Tuple[np.ndarray, int, 
         else:
             processed_data[field] = fallback_value
 
-    # Fill Categorical Features with explicit defaults
     for field, default_value in CATEGORICAL_DEFAULTS.items():
         processed_data[field] = str(user_input.get(field, default_value))
     
     
-    # 2. RULE-BASED FEATURE ENGINEERING (Features for ML vector)
+    #  RULE-BASED FEATURE ENGINEERING (Features for ML vector)
     rule_score, rule_flags = calculate_rule_based_score(processed_data)
     processed_data.update(rule_flags)
     
-    # Add other required engineered binary features for the ML vector
     processed_data['high_velocity_6h'] = 1.0 if processed_data.get('velocity_6h', 0) > 10000 else 0.0 
     processed_data['high_velocity_24h'] = 1.0 if processed_data.get('velocity_24h', 0) > 50000 else 0.0
     processed_data['device_fraud_history'] = 1.0 if processed_data.get('device_fraud_count', 0) > 0 else 0.0
     processed_data['rule_based_fraud_score'] = float(rule_score)
     
     
-    # 3. CONVERT TO DATAFRAME FOR ENCODING/ALIGNMENT
+    # CONVERT TO DATAFRAME FOR ENCODING/ALIGNMENT
     df = pd.DataFrame([processed_data])
 
-    # 4. LABEL ENCODE CATEGORICALS (using saved encoders)
+    #  LABEL ENCODE CATEGORICALS 
     for col, encoder in label_encoders.items():
         if col in df.columns:
-            # Safely encode, setting unknown categories to 0.0
             df[col] = df[col].apply(
                 lambda x: float(encoder.transform([str(x)])[0]) if str(x) in encoder.classes_ else 0.0
             )
@@ -125,18 +109,15 @@ def preprocess_user_input(user_input: Dict[str, Any]) -> Tuple[np.ndarray, int, 
              df[col] = 0.0
 
 
-    # 5. ALIGN FINAL FEATURE VECTOR AND SCALE (CRITICAL STEP)
+    # ALIGN FINAL FEATURE VECTOR AND SCALE 
     for col in feature_cols: 
         if col not in df.columns:
             df[col] = 0.0
             
-    # Extract the vector in the PRECISE ORDER expected by the model
     feature_vector_aligned = df[feature_cols].values.astype(float) 
 
-    # Scale the aligned feature vector
     feature_scaled = scaler.transform(feature_vector_aligned)
     
-    # Return scaled vector, final score, and flags for API response
     return feature_scaled, rule_score, rule_flags
 
 
@@ -146,12 +127,10 @@ def hybrid_predict(user_input):
     df_scaled, rule_score, risk_factors = preprocess_user_input(user_input)
     
     ml_pred = model.predict(df_scaled)[0]
-    ml_prob = model.predict_proba(df_scaled)[0][1] # Probability of Fraud
+    ml_prob = model.predict_proba(df_scaled)[0][1] 
 
-    # Calculate Safety Probability (requested by user)
     safety_prob = 1.0 - ml_prob
     
-    # Hybrid Decision Logic
     if rule_score >= 5:
         hybrid_pred = 1
         prediction_method = "Rule-based (High Risk Score)"
@@ -159,8 +138,6 @@ def hybrid_predict(user_input):
         hybrid_pred = 1
         prediction_method = "ML High Confidence"
     else:
-        # FIX: Implement a custom threshold (e.g., 0.65) higher than the default 0.5
-        # This prevents safe transactions with ML Prob > 0.5 but < 0.7 from being flagged as Fraud.
         if ml_prob > 0.65:
             hybrid_pred = 1
             prediction_method = "ML Standard (Custom Fraud Threshold)"
@@ -172,50 +149,46 @@ def hybrid_predict(user_input):
 
 
 def analyze_risk_factors(risk_factors, rule_score):
-    """Analyze which factors contribute to fraud risk"""
     risk_analysis = []
     
     if risk_factors.get('underage_risk'):
-        risk_analysis.append("🚨 CRITICAL: Underage customer (age < 18)")
+        risk_analysis.append(" CRITICAL: Underage customer (age < 18)")
     
     if risk_factors.get('extreme_withdrawal'):
-        risk_analysis.append("🚨 CRITICAL: Withdrawal exceeds income")
+        risk_analysis.append(" CRITICAL: Withdrawal exceeds income")
     
     if risk_factors.get('high_withdrawal'):
-        risk_analysis.append("🚨 HIGH: Withdrawal > 50% of income")
+        risk_analysis.append(" HIGH: Withdrawal > 50% of income")
     
     if risk_factors.get('very_short_session'):
-        risk_analysis.append("⚠️ SUSPICIOUS: Very short session (< 1 minute)")
+        risk_analysis.append(" SUSPICIOUS: Very short session (< 1 minute)")
     
     if risk_factors.get('very_long_session'):
-        risk_analysis.append("⚠️ SUSPICIOUS: Very long session (> 3 hours)")
+        risk_analysis.append(" SUSPICIOUS: Very long session (> 3 hours)")
     
     if risk_factors.get('credit_mismatch'):
-        risk_analysis.append("⚠️ HIGH: Withdrawal exceeds credit risk score")
+        risk_analysis.append(" HIGH: Withdrawal exceeds credit risk score")
     
     if risk_factors.get('low_email_similarity'):
-        risk_analysis.append("⚠️ SUSPICIOUS: Low email similarity")
+        risk_analysis.append(" SUSPICIOUS: Low email similarity")
     
     if risk_factors.get('foreign_transaction'):
-        risk_analysis.append("⚠️ MODERATE: Foreign transaction")
+        risk_analysis.append(" MODERATE: Foreign transaction")
     
     ratio = risk_factors.get('withdrawal_ratio', 0)
     
-    # Update analysis to emphasize safety for low ratios
     if ratio < 0.01:
-         risk_analysis.append(f"✅ VERY LOW RISK: Withdrawal is only {ratio:.2%} of income.")
+         risk_analysis.append(f" VERY LOW RISK: Withdrawal is only {ratio:.2%} of income.")
     elif ratio > 1.0:
-        risk_analysis.append(f"🚨 EXTREME: Withdrawal is {ratio:.1f}x income")
+        risk_analysis.append(f" EXTREME: Withdrawal is {ratio:.1f}x income")
     elif ratio > 0.5:
-        risk_analysis.append(f"⚠️ HIGH: Withdrawal is {ratio:.1%} of income")
+        risk_analysis.append(f" HIGH: Withdrawal is {ratio:.1%} of income")
     elif ratio > 0.1:
-        risk_analysis.append(f"ℹ️ MODERATE: Withdrawal is {ratio:.1%} of income")
+        risk_analysis.append(f" MODERATE: Withdrawal is {ratio:.1%} of income")
     
     return risk_analysis
 
-# Main interactive section
 if __name__ == "__main__":
-    # Injected neutral values for local testing completeness
     NEUTRAL_TEST_INPUTS = {
         'credit_risk_score': 5000,
         'name_email_similarity': 0.9,
@@ -230,8 +203,7 @@ if __name__ == "__main__":
     
     user_data = {}
     
-    print("\n📝 Please provide transaction details (enter default if unsure):")
-    # Collect core user inputs
+    print("\n Please provide transaction details (enter default if unsure):")
     user_data['income'] = input("Enter income (e.g., 50000): ")
     user_data['customer_age'] = input("Enter customer age: ")
     user_data['intended_balcon_amount'] = input("Enter intended withdrawal amount (e.g., 500): ")
@@ -241,17 +213,15 @@ if __name__ == "__main__":
     user_data['payment_type'] = input("Enter payment type (credit_card, debit_card, paypal): ")
     user_data['device_os'] = input("Enter device OS (ios, android, windows): ")
     
-    # Merge with neutral defaults for features not requested from user
     final_user_data = {**NEUTRAL_TEST_INPUTS, **user_data}
     
-    # Updated call to hybrid_predict
     prediction, ml_prob, rule_score, method, risk_factors, safety_prob = hybrid_predict(final_user_data)
     risk_analysis = analyze_risk_factors(risk_factors, rule_score)
     
     print(f"\n" + "=" * 70)
-    print("🎯 FRAUD ANALYSIS RESULTS")
+    print("FRAUD ANALYSIS RESULTS")
     print("=" * 70)
-    print(f"Final Prediction: {'🚨 FRAUD' if prediction == 1 else '✅ LEGITIMATE'}")
+    print(f"Final Prediction: {'FRAUD' if prediction == 1 else ' LEGITIMATE'}")
     print(f"Prediction Method: {method}")
     print(f"Rule-based Score: {rule_score}/10")
     print(f"ML Probability of Fraud: {ml_prob:.4f}")
@@ -260,20 +230,20 @@ if __name__ == "__main__":
     print(f"Confidence of **Safety**: **{safety_prob:.2%}** ({safety_prob:.4f})") 
     
     if risk_analysis:
-        print(f"\n🚨 RISK FACTORS DETECTED:")
+        print(f"\n RISK FACTORS DETECTED:")
         for factor in risk_analysis:
             print(f"   {factor}")
     else:
-        print(f"\n✅ No significant risk factors detected")
+        print(f"\n No significant risk factors detected")
     
     print(f"\n" + "=" * 70)
     if prediction == 1:
-        print("🚨 FRAUD DETECTED! Transaction blocked.")
+        print(" FRAUD DETECTED! Transaction blocked.")
         if rule_score >= 5:
             print("   Reason: Rule-based high-risk indicators detected")
         else:
             print("   Reason: Machine learning high-confidence fraud detection")
     else:
-        print("✅ Legitimate transaction. Proceeding...")
+        print(" Legitimate transaction. Proceeding...")
         print("   Reason: High confidence in transaction safety.")
     print("=" * 70)
